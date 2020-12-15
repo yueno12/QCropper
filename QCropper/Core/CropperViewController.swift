@@ -155,7 +155,7 @@ open class CropperViewController: UIViewController, Rotatable, StateRestorable, 
         return topBar
     }()
 
-    open lazy var toolbar: UIView = {
+    open lazy var toolbar: Toolbar = {
         let toolbar = Toolbar(frame: CGRect(x: 0, y: 0, width: self.view.width, height: view.safeAreaInsets.bottom + barHeight))
         toolbar.doneButton.addTarget(self, action: #selector(confirmButtonPressed(_:)), for: .touchUpInside)
         toolbar.cancelButton.addTarget(self, action: #selector(cancelButtonPressed(_:)), for: .touchUpInside)
@@ -178,12 +178,20 @@ open class CropperViewController: UIViewController, Rotatable, StateRestorable, 
 
     open lazy var overlay: Overlay = Overlay(frame: self.view.bounds)
 
-    public lazy var angleRuler: AngleRuler = {
-        let ar = AngleRuler(frame: CGRect(x: 0, y: 0, width: view.width, height: 80))
-        ar.addTarget(self, action: #selector(angleRulerValueChanged(_:)), for: .valueChanged)
-        ar.addTarget(self, action: #selector(angleRulerTouchEnded(_:)), for: [.editingDidEnd])
-        return ar
-    }()
+    public var angleRuler: AngleRuler! {
+        willSet {
+            self.angleRuler?.removeFromSuperview()
+            self.angleRuler?.removeTarget(self, action: #selector(angleRulerValueChanged(_:)), for: .valueChanged)
+            self.angleRuler?.removeTarget(self, action: #selector(angleRulerTouchEnded(_:)), for: [.editingDidEnd])
+        }
+        didSet {
+            if let angleRuler = self.angleRuler {
+                angleRuler.addTarget(self, action: #selector(angleRulerValueChanged(_:)), for: .valueChanged)
+                angleRuler.addTarget(self, action: #selector(angleRulerTouchEnded(_:)), for: [.editingDidEnd])
+                self.bottomView.addSubview(angleRuler)
+            }
+        }
+    }
 
     public lazy var aspectRatioPicker: AspectRatioPicker = {
         let picker = AspectRatioPicker(frame: CGRect(x: 0, y: 0, width: view.width, height: 80))
@@ -250,7 +258,6 @@ open class CropperViewController: UIViewController, Rotatable, StateRestorable, 
         backgroundView.addSubview(scrollViewContainer)
         backgroundView.addSubview(overlay)
         bottomView.addSubview(aspectRatioPicker)
-        bottomView.addSubview(angleRuler)
         bottomView.addSubview(toolbar)
 
         view.addSubview(backgroundView)
@@ -260,6 +267,8 @@ open class CropperViewController: UIViewController, Rotatable, StateRestorable, 
 
     open override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+
+        self.angleRuler = AngleRuler(frame: CGRect(x: 0, y: 0, width: view.width, height: 80))
 
         // Layout when self.view finish layout and never layout before, or self.view need reload
         if let viewFrame = defaultCropperState?.viewFrame,
