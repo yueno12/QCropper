@@ -152,6 +152,7 @@ open class CropperViewController: UIViewController, Rotatable, StateRestorable, 
         topBar.flipButton.addTarget(self, action: #selector(flipButtonPressed(_:)), for: .touchUpInside)
         topBar.rotateButton.addTarget(self, action: #selector(rotateButtonPressed(_:)), for: .touchUpInside)
         topBar.aspectRationButton.addTarget(self, action: #selector(aspectRationButtonPressed(_:)), for: .touchUpInside)
+        topBar.isHidden = true
         return topBar
     }()
 
